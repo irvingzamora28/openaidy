@@ -106,6 +106,18 @@ The factory pattern is used to create the appropriate provider based on configur
 | LLM_MODEL | Model name to use | Yes | gpt-3.5-turbo, gemini-pro |
 | LLM_API_URL | Base URL for the API (required for DeepSeek and Ollama) | For some providers | http://localhost:11434/v1 |
 
+## Known Issues
+
+### Google Protobuf Warnings
+
+The Google Generative AI SDK generates deprecation warnings related to internal implementation details that will be deprecated in Python 3.14:
+
+```
+DeprecationWarning: Type google._upb._message.MessageMapContainer uses PyType_Spec with a metaclass that has custom tp_new. This is deprecated and will no longer be allowed in Python 3.14.
+```
+
+These warnings are suppressed in our test suite using warning filters in `backend/tests/filter_warnings.py`. The warnings will be resolved when Google updates their library.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
