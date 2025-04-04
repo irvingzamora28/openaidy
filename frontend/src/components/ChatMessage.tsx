@@ -1,4 +1,5 @@
 import { ChatMessage as ChatMessageType } from '../types/chat';
+import ReactMarkdown from 'react-markdown';
 
 interface Props {
   message: ChatMessageType;
@@ -13,7 +14,9 @@ export function ChatMessage({ message }: Props) {
 
   return (
     <div className={`p-4 rounded-lg ${messageClasses[message.role]}`}>
-      {message.content}
+      <ReactMarkdown>
+        {message.content}
+      </ReactMarkdown>
     </div>
   );
 }

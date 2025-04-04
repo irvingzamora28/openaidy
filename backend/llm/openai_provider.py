@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Any
 
 from openai import AsyncOpenAI
 from .base import LLMProvider
+from ..utils.text_formatter import format_llm_response
 
 
 class OpenAIProvider(LLMProvider):
@@ -54,8 +55,14 @@ class OpenAIProvider(LLMProvider):
             **kwargs
         )
 
+        # Get the raw content
+        raw_content = response.choices[0].message.content
+
+        # Format the content for better readability
+        formatted_content = format_llm_response(raw_content)
+
         return {
-            "content": response.choices[0].message.content,
+            "content": formatted_content,
             "role": "assistant",
             "model": response.model,
             "raw_response": response

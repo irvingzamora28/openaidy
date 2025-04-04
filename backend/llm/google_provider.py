@@ -4,6 +4,7 @@ Google Gemini LLM provider.
 from typing import Dict, List, Optional, Any
 import google.generativeai as genai
 from .base import LLMProvider
+from ..utils.text_formatter import format_llm_response
 
 
 class GoogleProvider(LLMProvider):
@@ -66,9 +67,15 @@ class GoogleProvider(LLMProvider):
                 response = await chat.send_message_async(content)
             # We don't need to handle assistant messages as they're part of the chat history
 
+        # Get the raw content
+        raw_content = response.text
+
+        # Format the content for better readability
+        formatted_content = format_llm_response(raw_content)
+
         # Return the last response
         return {
-            "content": response.text,
+            "content": formatted_content,
             "role": "assistant",
             "model": model or self.default_model,
             "raw_response": response

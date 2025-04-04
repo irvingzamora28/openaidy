@@ -89,6 +89,7 @@ async def test_openai_provider_generate_completion():
         temperature=0.7,
         max_tokens=None
     )
+    # The content should be the original text, possibly with some formatting
     assert response["content"] == "Hello, human!"
     assert response["role"] == "assistant"
     assert response["model"] == "test-model"
@@ -144,6 +145,7 @@ async def test_openai_provider_generate_completion_with_params():
         max_tokens=100,
         top_p=0.9
     )
+    # The content should be the original text, possibly with some formatting
     assert response["content"] == "Hello, human!"
     assert response["role"] == "assistant"
     assert response["model"] == "custom-model"

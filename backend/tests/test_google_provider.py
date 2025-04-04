@@ -72,6 +72,7 @@ async def test_google_provider_generate_completion():
     mock_model.start_chat.assert_called_once()
     mock_chat.send_message_async.assert_called_once_with("Hello, world!")
 
+    # The content should be the original text, possibly with some formatting
     assert response["content"] == "Hello, human!"
     assert response["role"] == "assistant"
     assert response["model"] == "test-model"
@@ -127,6 +128,7 @@ async def test_google_provider_generate_completion_with_params():
     mock_model.start_chat.assert_called_once()
     mock_chat.send_message_async.assert_called_once_with("Hello, world!")
 
+    # The content should be the original text, possibly with some formatting
     assert response["content"] == "Hello, human!"
     assert response["role"] == "assistant"
     assert response["model"] == "custom-model"
@@ -172,6 +174,7 @@ async def test_google_provider_multiple_messages():
     mock_chat.send_message_async.assert_any_call("Hello")
     mock_chat.send_message_async.assert_any_call("How are you?")
 
+    # The content should be the original text, possibly with some formatting
     assert response["content"] == "I'm doing well, thanks for asking!"
     assert response["role"] == "assistant"
     assert response["model"] == "test-model"
