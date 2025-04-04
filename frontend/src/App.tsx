@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChatMessage as ChatMessageType } from './types/chat';
 import { ChatMessage } from './components/ChatMessage';
 import { ChatInput } from './components/ChatInput';
+import { DarkModeToggle } from './components/DarkModeToggle';
 import { apiService } from './services/api';
 
 function App() {
@@ -85,8 +86,14 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
       <div className="max-w-4xl mx-auto p-4">
+        {/* Header with Dark Mode Toggle */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">OpenAIDY Chat</h1>
+          <DarkModeToggle />
+        </div>
+
         {/* Chat Messages */}
         <div className="space-y-4 mb-24">
           {messages.map(message => (
@@ -100,7 +107,7 @@ function App() {
         </div>
 
         {/* Input Form */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white p-4">
+        <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 p-4 border-t border-gray-200 dark:border-gray-700 transition-colors duration-200">
           <div className="max-w-4xl mx-auto">
             <ChatInput
               onSendMessage={handleSendMessage}

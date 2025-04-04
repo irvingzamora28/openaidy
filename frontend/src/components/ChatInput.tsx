@@ -11,7 +11,7 @@ export function ChatInput({ onSendMessage, disabled }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
-    
+
     onSendMessage(input);
     setInput('');
   };
@@ -23,13 +23,13 @@ export function ChatInput({ onSendMessage, disabled }: Props) {
         value={input}
         onChange={(e) => setInput(e.target.value)}
         disabled={disabled}
-        className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 transition-colors duration-200"
         placeholder="Type your message..."
       />
       <button
         type="submit"
         disabled={disabled}
-        className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition disabled:bg-blue-300"
+        className="bg-blue-500 dark:bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors duration-200 disabled:bg-blue-300 dark:disabled:bg-blue-800"
       >
         Send
       </button>
