@@ -7,6 +7,10 @@ import { apiService } from './services/api';
 function App() {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState<ChatMessageType | null>(null);
+
+  // Use streaming by default
+  const useStreaming = true;
 
   const handleSendMessage = async (content: string) => {
     // Add user message
@@ -18,15 +22,56 @@ function App() {
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
+    // Reset streaming message
+    setStreamingMessage(null);
+
     try {
       // Get all messages to maintain conversation context
       const allMessages = [...messages, userMessage];
 
-      // Send to API and get response
-      const assistantMessage = await apiService.sendChatCompletion(allMessages);
+      if (useStreaming) {
+        // Create an initial streaming message
+        const initialStreamingMessage: ChatMessageType = {
+          role: 'assistant',
+          content: '',
+          id: `streaming-${Date.now()}`,
+        };
+        setStreamingMessage(initialStreamingMessage);
 
-      // Add assistant message to chat
-      setMessages(prev => [...prev, assistantMessage]);
+        // Use streaming API
+        await apiService.sendChatCompletionStream(
+          allMessages,
+          // Handle each chunk
+          (content, _delta) => {
+            setStreamingMessage(prev => {
+              if (!prev) return null;
+              return { ...prev, content };
+            });
+          },
+          // Handle completion
+          (assistantMessage) => {
+            setStreamingMessage(null);
+            setMessages(prev => [...prev, assistantMessage]);
+            setIsLoading(false);
+          },
+          // Handle errors
+          (error) => {
+            setStreamingMessage(null);
+            const errorMessage: ChatMessageType = {
+              role: 'system',
+              content: error.message || 'Error processing your request',
+              id: (Date.now() + 1).toString(),
+            };
+            setMessages(prev => [...prev, errorMessage]);
+            setIsLoading(false);
+          }
+        );
+      } else {
+        // Use non-streaming API
+        const assistantMessage = await apiService.sendChatCompletion(allMessages);
+        setMessages(prev => [...prev, assistantMessage]);
+        setIsLoading(false);
+      }
     } catch (error) {
       console.error('Error in chat:', error);
       const errorMessage: ChatMessageType = {
@@ -35,7 +80,6 @@ function App() {
         id: (Date.now() + 1).toString(),
       };
       setMessages(prev => [...prev, errorMessage]);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -48,6 +92,11 @@ function App() {
           {messages.map(message => (
             <ChatMessage key={message.id} message={message} />
           ))}
+
+          {/* Show streaming message if available */}
+          {streamingMessage && (
+            <ChatMessage key={streamingMessage.id} message={streamingMessage} />
+          )}
         </div>
 
         {/* Input Form */}

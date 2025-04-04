@@ -24,3 +24,12 @@ class ChatCompletionResponse(BaseModel):
     role: str = Field(..., description="The role of the message sender (usually 'assistant')")
     content: str = Field(..., description="The generated completion")
     model: str = Field(..., description="The model used for completion")
+
+
+class ChatCompletionChunk(BaseModel):
+    """Response model for streaming chat completion chunks."""
+    role: str = Field(..., description="The role of the message sender (usually 'assistant')")
+    content: str = Field(..., description="The accumulated content so far")
+    content_delta: str = Field(..., description="The new content in this chunk")
+    model: str = Field(..., description="The model used for completion")
+    finished: bool = Field(False, description="Whether this is the final chunk")

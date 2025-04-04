@@ -33,6 +33,8 @@ class MockLLMProvider(LLMProvider):
             "model": "mock-model"
         }
 
+        self.generate_completion_stream_mock = AsyncMock()
+
     async def generate_completion(self,
                                  messages,
                                  model=None,
@@ -47,6 +49,31 @@ class MockLLMProvider(LLMProvider):
             max_tokens=max_tokens,
             **kwargs
         )
+
+    async def generate_completion_stream(self,
+                                       messages,
+                                       model=None,
+                                       temperature=0.7,
+                                       max_tokens=None,
+                                       **kwargs):
+        """Mock implementation for streaming that yields a single result."""
+        # Default implementation just yields the same response as non-streaming
+        response = await self.generate_completion_mock(
+            messages,
+            model=model,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            **kwargs
+        )
+
+        # Yield a single chunk with the full content
+        yield {
+            "content": response["content"],
+            "content_delta": response["content"],
+            "role": response["role"],
+            "model": response["model"],
+            "finished": True
+        }
 
 
 @pytest.fixture
