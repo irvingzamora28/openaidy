@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChatMessage as ChatMessageType } from './types/chat';
 import { ChatMessage } from './components/ChatMessage';
 import { ChatInput } from './components/ChatInput';
+import { apiService } from './services/api';
 
 function App() {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
@@ -18,20 +19,19 @@ function App() {
     setIsLoading(true);
 
     try {
-      // TODO: Implement API call
-      // For now, just echo the message after a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const assistantMessage: ChatMessageType = {
-        role: 'assistant',
-        content: `Echo: ${content}`,
-        id: (Date.now() + 1).toString(),
-      };
+      // Get all messages to maintain conversation context
+      const allMessages = [...messages, userMessage];
+
+      // Send to API and get response
+      const assistantMessage = await apiService.sendChatCompletion(allMessages);
+
+      // Add assistant message to chat
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
+      console.error('Error in chat:', error);
       const errorMessage: ChatMessageType = {
         role: 'system',
-        content: 'Error processing your request',
+        content: error instanceof Error ? error.message : 'Error processing your request',
         id: (Date.now() + 1).toString(),
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -53,7 +53,7 @@ function App() {
         {/* Input Form */}
         <div className="fixed bottom-0 left-0 right-0 bg-white p-4">
           <div className="max-w-4xl mx-auto">
-            <ChatInput 
+            <ChatInput
               onSendMessage={handleSendMessage}
               disabled={isLoading}
             />
