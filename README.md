@@ -105,3 +105,7 @@ The factory pattern is used to create the appropriate provider based on configur
 | LLM_API_KEY | API key for the provider | Yes | sk-... |
 | LLM_MODEL | Model name to use | Yes | gpt-3.5-turbo, gemini-pro |
 | LLM_API_URL | Base URL for the API (required for DeepSeek and Ollama) | For some providers | http://localhost:11434/v1 |
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
