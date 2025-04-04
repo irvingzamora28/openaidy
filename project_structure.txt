@@ -1,0 +1,18 @@
+ai_agents_webapp/
+├── backend/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── requirements.txt
+│   └── api/
+│       ├── __init__.py
+│       └── routes.py
+├── frontend/
+│   ├── index.html
+│   ├── package.json
+│   ├── tailwind.config.js
+│   ├── static/
+│   │   ├── css/
+│   │   └── js/
+│   └── src/
+│       └── main.js
+└── README.md
