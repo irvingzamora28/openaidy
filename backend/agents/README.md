@@ -113,15 +113,28 @@ See the `examples` directory for usage examples:
 
 During testing, we identified some performance limitations with the MCP Python library approach:
 
-- **Timeouts**: Operations like screenshot capture may time out but still complete in the background
-- **Latency**: The MCP library adds some overhead compared to direct JSON-RPC communication
-- **Resource Management**: Proper cleanup is essential to prevent resource leaks
+- **Context Management**: Using context managers properly is essential for performance
+- **Session Reuse**: Creating a new session for each operation is inefficient
+- **Error Handling**: Proper error handling is needed to handle different response formats
 
-In a production implementation, we may need to consider:
+We've implemented two different approaches:
 
-1. **Hybrid Approach**: Using direct JSON-RPC for performance-critical operations
-2. **Optimized Communication**: Reducing unnecessary abstraction layers
-3. **Better Error Recovery**: Implementing more sophisticated error recovery mechanisms
+1. **BaseAgentSession**: A robust implementation with timeout handling (slower)
+2. **EfficientMCPAgent**: A faster implementation using proper context management
+
+### Performance Comparison
+
+| Operation | BaseAgentSession | EfficientMCPAgent |
+|-----------|-----------------|-------------------|
+| Navigation | 20+ seconds | ~2 seconds |
+| Screenshot | 20+ seconds | ~1 second |
+| Sequence | 40+ seconds | ~3 seconds |
+
+The key to good performance is:
+
+1. **Use Context Managers**: Follow the official documentation pattern
+2. **Reuse Sessions**: Run sequences of operations in a single session
+3. **Proper Initialization**: Initialize the session correctly
 
 ## Next Steps
 
