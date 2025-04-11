@@ -1,208 +1,200 @@
 """
-Direct MCP tool integration without smolagents dependency.
-"""
-from typing import List, Dict, Any, Optional
-import asyncio
-import os
-import base64
-from pydantic import BaseModel
+Base agent interface and implementation.
 
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
+This module defines the base agent interface and provides a basic implementation
+that can be extended by specific agent types.
+"""
+from abc import ABC, abstractmethod
+from typing import Dict, Any, List, Optional, TypeVar, Generic
+from pydantic import BaseModel, Field
+
+# Type variable for agent results
+T = TypeVar('T')
 
 class AgentConfig(BaseModel):
-    """Configuration for an agent."""
+    """Base configuration for an agent."""
     name: str
-    description: str
-    mcp_tools: List[str]  # MCP tools to use
-    custom_tools: List[str] = []  # Additional custom tools
-    # MCP server configuration
-    mcp_command: str
-    mcp_args: List[str]
+    description: str = ""
+    version: str = "1.0.0"
 
-class BaseAgentSession:
-    """Base class for agent sessions with direct MCP integration."""
+    class Config:
+        """Pydantic configuration."""
+        extra = "allow"  # Allow extra fields for agent-specific configuration
+
+class AgentResult(BaseModel, Generic[T]):
+    """Result of an agent operation."""
+    success: bool = True
+    data: Optional[T] = None
+    error: Optional[str] = None
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+class BaseAgent(ABC):
+    """
+    Base agent interface.
+
+    This abstract class defines the common interface for all agents.
+    """
 
     def __init__(self, config: AgentConfig):
-        """Initialize the agent with the given configuration."""
+        """
+        Initialize the agent with the given configuration.
+
+        Args:
+            config: The agent configuration
+        """
         self.config = config
-        self.mcp_session: Optional[ClientSession] = None
-        self._transport = None
-        self.client_ctx = None
-        self.server_params = None
-        self._tools: Dict[str, Any] = {}
+        self._initialized = False
 
-    async def initialize(self, timeout=60):
-        """Initialize MCP session and tools with timeout."""
-        try:
-            # Setup MCP server parameters
-            print(f"Starting MCP server: {self.config.mcp_command} {' '.join(self.config.mcp_args)}")
-            self.server_params = StdioServerParameters(
-                command=self.config.mcp_command,
-                args=self.config.mcp_args,
-                env=os.environ.copy()  # Pass current environment
+    @abstractmethod
+    async def initialize(self) -> AgentResult:
+        """
+        Initialize the agent.
+
+        This method should be called before using the agent.
+
+        Returns:
+            An AgentResult indicating success or failure
+        """
+        self._initialized = True
+        return AgentResult(success=True, data=f"Initialized {self.config.name}")
+
+    @abstractmethod
+    async def run(self, task: str) -> AgentResult:
+        """
+        Run a task.
+
+        Args:
+            task: The task to run
+
+        Returns:
+            An AgentResult containing the result of the task
+        """
+        if not self._initialized:
+            return AgentResult(
+                success=False,
+                error="Agent not initialized. Call initialize() first."
+            )
+        return AgentResult(success=True)
+
+    @abstractmethod
+    async def run_sequence(self, tasks: List[str]) -> List[AgentResult]:
+        """
+        Run a sequence of tasks.
+
+        This method should be implemented to run multiple tasks in a single session
+        for better performance.
+
+        Args:
+            tasks: The tasks to run
+
+        Returns:
+            A list of AgentResults containing the results of the tasks
+        """
+        if not self._initialized:
+            return [AgentResult(
+                success=False,
+                error="Agent not initialized. Call initialize() first."
+            )]
+
+        results = []
+        for task in tasks:
+            results.append(await self.run(task))
+        return results
+
+    @abstractmethod
+    async def cleanup(self) -> AgentResult:
+        """
+        Clean up resources.
+
+        This method should be called when the agent is no longer needed.
+
+        Returns:
+            An AgentResult indicating success or failure
+        """
+        self._initialized = False
+        return AgentResult(success=True)
+
+    async def __aenter__(self):
+        """
+        Enter the agent context.
+
+        This method allows the agent to be used as an async context manager.
+
+        Returns:
+            The agent instance
+        """
+        await self.initialize()
+        return self
+
+    async def __aexit__(self, *_):
+        """
+        Exit the agent context.
+
+        This method allows the agent to be used as an async context manager.
+        """
+        await self.cleanup()
+
+
+class SimpleAgent(BaseAgent):
+    """
+    A simple agent implementation.
+
+    This class provides a basic implementation of the BaseAgent interface
+    that can be used for testing or as a starting point for custom agents.
+    """
+
+    async def initialize(self) -> AgentResult:
+        """
+        Initialize the agent.
+
+        Returns:
+            An AgentResult indicating success
+        """
+        await super().initialize()
+        return AgentResult(success=True, data=f"Initialized {self.config.name}")
+
+    async def run(self, task: str) -> AgentResult:
+        """
+        Run a task.
+
+        Args:
+            task: The task to run
+
+        Returns:
+            An AgentResult containing the task as data
+        """
+        if not self._initialized:
+            return AgentResult(
+                success=False,
+                error="Agent not initialized. Call initialize() first."
             )
 
-            # Create MCP session using stdio_client
-            print("Creating MCP session...")
-            self.client_ctx = stdio_client(self.server_params)
-            self._transport = await self.client_ctx.__aenter__()
-            read_stream, write_stream = self._transport
+        return AgentResult(success=True, data=f"Executed task: {task}")
 
-            # Create the client session
-            self.mcp_session = ClientSession(read_stream, write_stream)
+    async def run_sequence(self, tasks: List[str]) -> List[AgentResult]:
+        """
+        Run a sequence of tasks.
 
-            # Initialize the session with timeout
-            print("Initializing session...")
-            try:
-                # Set a timeout for initialization
-                init_task = asyncio.create_task(self.mcp_session.initialize())
-                try:
-                    await asyncio.wait_for(init_task, timeout)
-                    print("Session initialized successfully")
-                except asyncio.TimeoutError:
-                    print(f"Session initialization timed out after {timeout} seconds, but continuing...")
-                    # We'll continue anyway since the initialization might still be in progress
-            except Exception as e:
-                print(f"Error during initialization: {e}")
-                await self.cleanup()
-                raise
+        Args:
+            tasks: The tasks to run
 
-            # List available tools
-            print("Listing tools...")
-            try:
-                # Set a timeout for listing tools
-                tools_task = asyncio.create_task(self.mcp_session.list_tools())
-                try:
-                    tools_result = await asyncio.wait_for(tools_task, 10)
-                    available_tools = [tool.name for tool in tools_result.tools]
-                    print(f"Available tools: {available_tools}")
+        Returns:
+            A list of AgentResults containing the tasks as data
+        """
+        if not self._initialized:
+            return [AgentResult(
+                success=False,
+                error="Agent not initialized. Call initialize() first."
+            )]
 
-                    # Register requested tools
-                    for tool_name in self.config.mcp_tools:
-                        if tool_name in available_tools:
-                            self._tools[tool_name] = tool_name
-                            print(f"Registered tool: {tool_name}")
-                        else:
-                            print(f"Warning: Requested tool '{tool_name}' not available")
-                except asyncio.TimeoutError:
-                    print("Tool listing timed out, assuming tools are available...")
-                    # Assume the requested tools are available
-                    for tool_name in self.config.mcp_tools:
-                        self._tools[tool_name] = tool_name
-                        print(f"Assumed tool available: {tool_name}")
-            except Exception as e:
-                print(f"Error listing tools: {e}")
-                # Continue anyway, we'll try to use the tools
+        return [AgentResult(success=True, data=f"Executed task: {task}") for task in tasks]
 
-            print("Initialization completed")
+    async def cleanup(self) -> AgentResult:
+        """
+        Clean up resources.
 
-        except Exception as e:
-            print(f"Initialization error: {str(e)}")
-            await self.cleanup()
-            raise RuntimeError(f"Failed to initialize agent: {str(e)}") from e
-
-    async def run(self, task: str) -> Dict[str, Any]:
-        """Run a task using available tools."""
-        if not self.mcp_session:
-            raise RuntimeError("Agent not initialized. Call initialize() first.")
-
-        print(f"Running task: {task}")
-        try:
-            if "navigate" in task.lower():
-                return await self._navigate(task)
-            elif "screenshot" in task.lower():
-                return await self._take_screenshot()
-            else:
-                raise ValueError(f"Task not recognized: {task}")
-        except Exception as e:
-            print(f"Error executing task: {e}")
-            raise
-
-    async def _navigate(self, task: str) -> Dict[str, Any]:
-        """Navigate to a URL."""
-        lower_task = task.lower()
-        nav_index = lower_task.find("navigate to ")
-        if nav_index != -1:
-            url = task[nav_index + len("navigate to "):].strip()
-            print(f"Navigating to URL: {url}")
-
-            # Call the navigate tool with timeout
-            try:
-                navigate_task = asyncio.create_task(
-                    self.mcp_session.call_tool("browser_navigate", {"url": url})
-                )
-                try:
-                    await asyncio.wait_for(navigate_task, 30)
-                    return {'response': f"Navigated to {url}"}
-                except asyncio.TimeoutError:
-                    print("Navigation timed out, but continuing...")
-                    return {'response': f"Navigation to {url} started (timed out waiting for completion)"}
-            except Exception as e:
-                print(f"Error during navigation: {e}")
-                raise
-        else:
-            raise ValueError(f"Could not extract URL from task: {task}")
-
-    async def _take_screenshot(self) -> Dict[str, Any]:
-        """Take a screenshot."""
-        print("Taking screenshot...")
-
-        # Call the screenshot tool with timeout
-        try:
-            screenshot_task = asyncio.create_task(
-                self.mcp_session.call_tool("browser_screen_capture", {})
-            )
-            try:
-                result = await asyncio.wait_for(screenshot_task, 30)
-
-                # Process the result
-                if result and result.content:
-                    for content in result.content:
-                        if hasattr(content, 'data') and content.data:
-                            # Convert image data to base64 string
-                            encoded_image = base64.b64encode(content.data).decode('utf-8')
-                            return {'image_base64': encoded_image}
-
-                    # If no image data found but we have content
-                    return {'response': str(result.content)}
-                else:
-                    return {'response': "Screenshot taken, but no image data returned"}
-            except asyncio.TimeoutError:
-                print("Screenshot timed out, but continuing...")
-                return {'response': "Screenshot started (timed out waiting for completion)"}
-        except Exception as e:
-            print(f"Error taking screenshot: {e}")
-            raise
-
-    async def cleanup(self):
-        """Cleanup MCP session and transport."""
-        print("Cleaning up resources...")
-
-        try:
-            # Clear session
-            self.mcp_session = None
-
-            # Exit context manager
-            if self.client_ctx:
-                try:
-                    # Set a timeout for exiting the context manager
-                    exit_task = asyncio.create_task(
-                        self.client_ctx.__aexit__(None, None, None)
-                    )
-                    try:
-                        await asyncio.wait_for(exit_task, 5)
-                        print("Context manager exited successfully")
-                    except asyncio.TimeoutError:
-                        print("Context manager exit timed out, continuing...")
-                except Exception as e:
-                    print(f"Error exiting context manager: {e}")
-
-                self.client_ctx = None
-                self._transport = None
-
-            # Clear tools
-            self._tools = {}
-            print("Cleanup completed")
-        except Exception as e:
-            print(f"Error during cleanup: {str(e)}")
+        Returns:
+            An AgentResult indicating success
+        """
+        await super().cleanup()
+        return AgentResult(success=True, data=f"Cleaned up {self.config.name}")

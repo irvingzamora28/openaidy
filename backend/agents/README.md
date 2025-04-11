@@ -1,148 +1,159 @@
-# MCP Agents Architecture (Proof of Concept)
+# Agent Architecture
 
-This package provides a proof of concept for a scalable architecture that enables creating agents using the Model Context Protocol (MCP). These agents can interact with various tools and services, and will ultimately be integrated with LLMs and frontend components.
+This package provides a scalable and maintainable architecture for creating agents that can interact with various tools and services, including MCP servers and custom tools.
 
 ## Architecture Overview
 
-This proof of concept demonstrates an agent architecture designed to be:
+The agent architecture is designed to be:
 
 1. **Scalable**: Easily add new agent types with different capabilities
-2. **Flexible**: Support multiple MCP servers and tool sets
-3. **Extensible**: Allow for custom tool handling and result processing
-4. **Modular**: Separate agent types for different use cases
-5. **Integrable**: Designed to work with LLMs and frontend components
-
-### Vision
-
-The ultimate vision for this architecture is to create a system where:
-
-1. **LLM Integration**: LLMs will be able to use these agents as tools to perform actions
-2. **Frontend Interaction**: Users will interact with agents through a web frontend
-3. **Custom Tools**: The system can be extended with custom tools beyond the built-in MCP capabilities
-4. **Multiple Providers**: Support for various LLM providers (OpenAI, Google, etc.) and MCP servers
+2. **Maintainable**: Clear separation of concerns and well-defined interfaces
+3. **Extensible**: Support for both MCP tools and custom tools
+4. **Performant**: Efficient implementation with proper resource management
+5. **Configurable**: Flexible configuration for different agent types
 
 ## Core Components
 
-### BaseAgentSession
+### BaseAgent
 
-The `BaseAgentSession` class provides the foundation for all agents:
+The `BaseAgent` class is the foundation of our agent architecture:
 
-- Manages MCP session lifecycle (initialization, execution, cleanup)
-- Handles tool discovery and registration
-- Provides basic task parsing and execution
-- Implements error handling and resource management
+- Defines the common interface for all agents
+- Provides basic lifecycle management (initialize, run, cleanup)
+- Implements common utility methods
 
-### AgentConfig
+### MCPAgent
 
-The `AgentConfig` class defines the configuration for an agent:
+The `MCPAgent` class extends `BaseAgent` to provide MCP-specific functionality:
 
-- Agent metadata (name, description)
-- MCP tools to use
-- MCP server configuration (command, arguments)
+- Manages MCP session lifecycle
+- Implements proper context management for optimal performance
+- Supports running sequences of operations in a single session
+- Handles different response formats
+- Automatically discovers available tools
 
 ### Specialized Agents
 
-Specialized agents extend the base agent with specific capabilities:
+Instead of creating specialized agent classes, we use the `MCPAgent` with appropriate configuration:
 
-- **ScreenshotAgent**: Focused on browser screenshots and navigation
-- **MCPAgent**: General-purpose agent that can use any MCP tools
+- **Browser Automation**: Use `MCPAgent` with Playwright MCP configuration
+- **Web Search**: Use `MCPAgent` with DuckDuckGo MCP configuration
+- **Custom Tools**: Use `MCPAgent` with custom MCP server configuration
 
-### Agent Factory
+### AgentFactory
 
 The `create_agent` function provides a factory pattern for creating agents:
 
-```python
-from backend.agents import create_agent
+- Creates agents based on configuration
+- Manages agent registration and discovery
+- Supports dependency injection for testing
 
-# Create a screenshot agent
-screenshot_agent = create_agent("screenshot")
+## Usage
 
-# Create a Playwright agent
-playwright_agent = create_agent("playwright")
-```
-
-## Adding New Agent Types
-
-To add a new agent type:
-
-1. Create a new class that extends `BaseAgentSession`
-2. Implement specialized task handling in the `run` method
-3. Register the agent in `factory.py` and `__init__.py`
-
-Example:
+### Creating an MCP Agent
 
 ```python
-from .base import BaseAgentSession, AgentConfig
+from backend.agents import create_agent, MCPAgentConfig
 
-class MyCustomAgent(BaseAgentSession):
-    DEFAULT_CONFIG = AgentConfig(
-        name="custom_agent",
-        description="My custom agent",
-        mcp_tools=["tool1", "tool2"],
-        mcp_command="npx",
-        mcp_args=["@my-package/mcp"]
-    )
+# Create a Playwright MCP agent
+playwright_config = MCPAgentConfig(
+    name="playwright_agent",
+    description="Playwright browser automation agent",
+    command="npx",
+    args=["@playwright/mcp@latest", "--vision", "--headless"],
+    tools=["browser_navigate", "browser_screen_capture"]
+)
 
-    def __init__(self, config: AgentConfig = None):
-        super().__init__(config or self.DEFAULT_CONFIG)
+playwright_agent = create_agent("mcp", playwright_config)
 
-    async def run(self, task: str) -> dict:
-        # Custom task handling
-        # ...
+# Initialize the agent
+await playwright_agent.initialize()
 
-        # Fall back to base implementation for standard tasks
-        return await super().run(task)
+# Run a task
+result = await playwright_agent.run("Navigate to https://example.com")
+
+# Run a sequence of tasks
+results = await playwright_agent.run_sequence([
+    "Navigate to https://example.com",
+    "Take a screenshot"
+])
+
+# Clean up
+await playwright_agent.cleanup()
 ```
 
-Then register it in `factory.py`:
+### Creating a DuckDuckGo MCP Agent
 
 ```python
-from .custom_agent import MyCustomAgent
+from backend.agents import create_agent, MCPAgentConfig
 
-AGENT_REGISTRY["custom"] = MyCustomAgent
+# Create a DuckDuckGo MCP agent
+duckduckgo_config = MCPAgentConfig(
+    name="duckduckgo_agent",
+    description="DuckDuckGo search agent",
+    command="uvx",
+    args=["duckduckgo-mcp-server"],
+    tools=["search", "fetch_content"]
+)
+
+duckduckgo_agent = create_agent("mcp", duckduckgo_config)
+
+# Initialize the agent
+await duckduckgo_agent.initialize()
+
+# Run a search
+result = await duckduckgo_agent.run("search How to use MCP")
+
+# Clean up
+await duckduckgo_agent.cleanup()
 ```
 
-## Usage Examples
+### Creating a Custom Agent
 
-See the `examples` directory for usage examples:
+```python
+from backend.agents import BaseAgent, AgentResult, register_agent
 
-- `take_screenshot.py`: Using the ScreenshotAgent
-- `playwright_agent.py`: Using the general-purpose Playwright agent
+class MyCustomAgent(BaseAgent):
+    """A custom agent implementation."""
+
+    async def initialize(self):
+        """Initialize the agent."""
+        # Custom initialization
+        return AgentResult(success=True, data="Initialized custom agent")
+
+    async def run(self, task):
+        """Run a task."""
+        # Custom task execution
+        return AgentResult(success=True, data=f"Executed task: {task}")
+
+    async def run_sequence(self, tasks):
+        """Run a sequence of tasks."""
+        # Custom sequence execution
+        return [AgentResult(success=True, data=f"Executed task: {task}") for task in tasks]
+
+    async def cleanup(self):
+        """Clean up resources."""
+        # Custom cleanup
+        return AgentResult(success=True, data="Cleaned up custom agent")
+
+# Register the agent
+register_agent("my_custom", MyCustomAgent)
+```
+
+## Best Practices
+
+1. **Use Context Managers**: Always use context managers for MCP sessions
+2. **Reuse Sessions**: Run sequences of operations in a single session
+3. **Proper Error Handling**: Handle different response formats and errors
+4. **Resource Cleanup**: Always clean up resources when done
+5. **Tool Discovery**: Use automatic tool discovery when possible
 
 ## Performance Considerations
 
-During testing, we identified some performance limitations with the MCP Python library approach:
+For optimal performance with MCP servers:
 
-- **Context Management**: Using context managers properly is essential for performance
-- **Session Reuse**: Creating a new session for each operation is inefficient
-- **Error Handling**: Proper error handling is needed to handle different response formats
-
-We've implemented two different approaches:
-
-1. **BaseAgentSession**: A robust implementation with timeout handling (slower)
-2. **EfficientMCPAgent**: A faster implementation using proper context management
-
-### Performance Comparison
-
-| Operation | BaseAgentSession | EfficientMCPAgent |
-|-----------|-----------------|-------------------|
-| Navigation | 20+ seconds | ~2 seconds |
-| Screenshot | 20+ seconds | ~1 second |
-| Sequence | 40+ seconds | ~3 seconds |
-
-The key to good performance is:
-
-1. **Use Context Managers**: Follow the official documentation pattern
-2. **Reuse Sessions**: Run sequences of operations in a single session
-3. **Proper Initialization**: Initialize the session correctly
-
-## Next Steps
-
-This proof of concept validates the approach, but several steps remain for a production implementation:
-
-1. **LLM Integration**: Connect these agents to our LLM pipeline
-2. **Frontend Components**: Create UI components for interacting with agents
-3. **API Endpoints**: Develop RESTful APIs for agent operations
-4. **Authentication**: Add proper authentication and authorization
-5. **Monitoring**: Implement logging and monitoring for agent operations
-6. **Testing**: Comprehensive testing of the entire system
+1. **Context Management**: Use context managers properly
+2. **Session Reuse**: Reuse sessions for multiple operations
+3. **Proper Initialization**: Initialize sessions correctly
+4. **Error Handling**: Handle errors gracefully
+5. **Resource Management**: Clean up resources properly

@@ -1,19 +1,30 @@
-"""Example script demonstrating the screenshot agent proof of concept.
+"""Example script demonstrating how to take screenshots with an MCP agent.
 
-This example shows how to use the screenshot agent to navigate to a URL and take a screenshot.
-It's part of the MCP agents architecture proof of concept.
+This example shows how to use an MCP agent with Playwright configuration
+to navigate to a URL and take a screenshot.
+
+NOTE: This example is deprecated. Use simplified_agent_example.py instead.
 """
 import asyncio
 import sys
 from dotenv import load_dotenv
-from backend.agents import create_agent
+from backend.agents import create_agent, MCPAgentConfig
 
 async def main():
     # Load environment variables from .env
     load_dotenv()
 
-    # Create and initialize the screenshot agent
-    agent = create_agent("screenshot")
+    # Create and initialize the MCP agent with Playwright configuration
+    playwright_config = MCPAgentConfig(
+        name="screenshot_agent",
+        description="Screenshot agent using Playwright",
+        command="npx",
+        args=["@playwright/mcp@latest", "--vision", "--headless"],
+        tools=["browser_navigate", "browser_screen_capture"]
+    )
+
+    # Create the agent using the factory
+    agent = create_agent("mcp", playwright_config)
 
     try:
         await agent.initialize()

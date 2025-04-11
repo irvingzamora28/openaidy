@@ -1,8 +1,10 @@
 """
-Example of using the general-purpose Playwright MCP agent.
+Example of using an MCP agent with Playwright configuration.
 
-This example demonstrates how to use the Playwright agent to navigate, take screenshots,
-and interact with web elements. It's part of the MCP agents architecture proof of concept.
+This example demonstrates how to use an MCP agent with Playwright configuration
+to navigate, take screenshots, and interact with web elements.
+
+NOTE: This example is deprecated. Use simplified_agent_example.py instead.
 """
 import asyncio
 import sys
