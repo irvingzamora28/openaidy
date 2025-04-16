@@ -7,11 +7,13 @@ from typing import Dict, Any, Type, Optional, Union
 
 from .base import BaseAgent, AgentConfig, SimpleAgent
 from .mcp_agent import MCPAgent, MCPAgentConfig
+from .langchain_agent import LangChainAgent, LangChainAgentConfig
 
 # Registry of agent types
 AGENT_REGISTRY: Dict[str, Type[BaseAgent]] = {
     "simple": SimpleAgent,
-    "mcp": MCPAgent
+    "mcp": MCPAgent,
+    "langchain": LangChainAgent
 }
 
 def register_agent(name: str, agent_class: Type[BaseAgent]) -> None:
@@ -55,7 +57,9 @@ def create_agent(
         elif agent_class == MCPAgent:
             # For MCPAgent, we require explicit configuration
             raise ValueError("MCPAgent requires explicit configuration. Please provide command and args.")
-
+        elif agent_class == LangChainAgent:
+            # For LangChainAgent, we create a default configuration
+            config = LangChainAgentConfig(name=f"{agent_type}_agent")
         else:
             raise ValueError(f"No default configuration for agent type: {agent_type}")
     elif isinstance(config, dict):
@@ -63,6 +67,8 @@ def create_agent(
             config = AgentConfig(**config)
         elif agent_class == MCPAgent:
             config = MCPAgentConfig(**config)
+        elif agent_class == LangChainAgent:
+            config = LangChainAgentConfig(**config)
         else:
             raise ValueError(f"No configuration class for agent type: {agent_type}")
 
