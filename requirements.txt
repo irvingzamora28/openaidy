@@ -3,7 +3,7 @@ uvicorn==0.24.0
 python-dotenv==1.0.0
 pydantic
 openai>=1.72.0
-google-generativeai
+google-genai
 
 # Agent dependencies
 mcp[cli]>=1.6.0

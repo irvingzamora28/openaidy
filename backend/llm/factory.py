@@ -30,8 +30,13 @@ def create_llm_provider(
     Raises:
         ValueError: If the provider type is not supported
     """
+    import logging
+    logging.basicConfig(level=logging.INFO)
     provider = provider.lower()
-    
+    logging.info(f"Requested LLM provider: {provider}")
+    logging.info(f"API key: {api_key}")
+    logging.info(f"Model: {model}")
+    logging.info(f"API URL: {api_url}")
     if provider == "openai":
         return OpenAIProvider(api_key=api_key, default_model=model)
     elif provider in ["deepseek", "ollama"]:
