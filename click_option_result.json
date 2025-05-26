@@ -1,0 +1,7 @@
+{
+  "click_confirmation": "Successfully clicked 'Load more'",
+  "snapshot_after_click": {
+    "success": true,
+    "message": "Snapshot captured successfully"
+  }
+}

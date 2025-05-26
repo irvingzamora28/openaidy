@@ -23,7 +23,8 @@ async def run(url, target_labels, mcp_server):
         mcp_servers=[mcp_server],
     )
     message = (
-        f"Take a snapshot of the DOM or accessibility tree. For each element whose visible label matches any of: {labels_str}, find and return its ref in a JSON object."
+        f"Take a snapshot of the DOM or accessibility tree. For each element whose visible label matches any of: {labels_str}, find and return its ref in a JSON object. "
+        "Only include labels in the output if a matching element is found. If a label is not present, omit it from the JSON result. Do not include nulls, empty strings, or explanations for missing labels."
     )
     result = await Runner.run(starting_agent=agent, input=message)
     cleaned_result = deep_clean(result.final_output)
