@@ -7,7 +7,7 @@ from agents.mcp import MCPServerStdio
 from agents import Agent, Runner
 from openaidy_agents.llm_env import MODEL_NAME
 
-async def run(url):
+async def run(url, mcp_server=None):
     """
     Discover interactive elements (e.g., load more, sorting buttons).
     Args:
@@ -15,30 +15,37 @@ async def run(url):
     Returns:
         dict: Interaction discovery result (JSON-serializable)
     """
-    async with MCPServerStdio(
-        cache_tools_list=True,
-        params={
-            "command": "npx",
-            "args": ["@playwright/mcp@latest", "--headless", "--viewport-size=1720,920"],
-        },
-    ) as mcp_server:
-        agent = Agent(
-            name="InteractionDiscoveryAgent",
-            instructions=(
-                "Analyze the Chrome Web Store reviews page and identify ALL interactive elements that could affect review extraction. "
-                "This includes (but is not limited to): load more buttons, filters, sorting controls, pagination controls, tabs, dropdowns, and any other element that changes which reviews are visible. "
-                "Return a JSON object with arrays for each type: 'load_more_buttons', 'sort_buttons', 'filters', 'pagination', 'tabs', 'dropdowns', and any other relevant group, each containing their refs and a short description. "
-                "Do not include review content, only references and descriptions."
-            ),
-            model=MODEL_NAME,
-            mcp_servers=[mcp_server],
-        )
-        message = (
-            f"Navigate to {url} and extract all interactive elements from the accessibility tree or DOM snapshot. "
-            "Return a JSON object with one array: 'interactive_elements'. "
-            "Identify and list ALL interactive elements that could affect which reviews are shown: load more buttons, filters, sorting controls, pagination, tabs, dropdowns, and any other relevant controls. "
-            "Return a JSON object with arrays for each type ('load_more_buttons', 'sort_buttons', 'filters', 'pagination', 'tabs', 'dropdowns', etc.), each containing refs and a short description."
+    if mcp_server is None:
+        async with MCPServerStdio(
+            cache_tools_list=True,
+            params={
+                "command": "npx",
+                "args": ["@playwright/mcp@latest", "--headless", "--viewport-size=1720,920"],
+            },
+        ) as mcp_server_:
+            return await run(url, mcp_server_)
+    # Use the provided mcp_server below
+    agent = Agent(
+        name="InteractionDiscoveryAgent",
+        instructions=(
+            "1. Navigate to the Chrome Web Store reviews page. "
+            "2. Find and press/click the button labeled 'Sort by' (do not use a fixed ref; use the visible label). "
+            "3. After pressing the button, take and return a snapshot of the full accessibility tree or DOM structure as JSON. "
             "Output only the JSON object, nothing else."
-        )
-        result = await Runner.run(starting_agent=agent, input=message)
-        return result.final_output
+        ),
+        model=MODEL_NAME,
+        mcp_servers=[mcp_server],
+    )
+    message = (
+        f"Navigate to {url}. "
+        "Find and press/click the button labeled 'Sort by'. "
+        "After pressing, take a snapshot of the full accessibility tree or DOM structure as JSON. "
+        "Return only this snapshot as JSON. "
+        "Output only the JSON object, nothing else."
+    )
+    result = await Runner.run(starting_agent=agent, input=message)
+    import json
+    with open("interaction_discovery.json", "w", encoding="utf-8") as f:
+        json.dump(result.final_output, f, indent=2, ensure_ascii=False)
+    return result.final_output
+
