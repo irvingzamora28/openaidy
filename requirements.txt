@@ -4,12 +4,19 @@ python-dotenv==1.0.0
 pydantic
 openai>=1.72.0
 google-genai
+openai-agents
+# Core dependencies for agentic LLM setup
+openai-agents[litellm]  # OpenAI Agents SDK with LiteLLM integration
+python-dotenv           # For loading .env files
+
+# Playwright MCP (for browser automation, if needed)
+# To run Playwright MCP server, you may need to install Node.js and Playwright globally, see project docs.
 
 # Agent dependencies
 mcp[cli]>=1.6.0
-langchain-mcp-adapters
-langchain-openai
-langchain
+# langchain-mcp-adapters
+# langchain-openai
+# langchain
 langgraph
 
 # Testing dependencies
