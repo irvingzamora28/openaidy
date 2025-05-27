@@ -49,13 +49,13 @@ export const agents: Record<AgentType, AgentConfig> = {
   'app-reviews': {
     type: 'app-reviews',
     label: 'App Reviews',
-    description: 'Analyze reviews from Chrome Web Store',
+    description: 'Analyze app reviews from the Chrome Web Store',
     inputs: [
       {
         id: 'url',
         type: 'text',
-        label: 'App URL',
-        placeholder: 'Enter Chrome Web Store app URL...',
+        label: 'Chrome Web Store URL',
+        placeholder: 'https://chrome.google.com/webstore/detail/...',
         required: true
       }
     ],

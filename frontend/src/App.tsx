@@ -1,42 +1,136 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChatMessage as ChatMessageType } from './types/chat';
 import { apiService } from './services/api';
 import { Layout } from './components/Layout';
 import { ChatContainer } from './components/ChatContainer';
 import { AgentProvider, useAgent } from './contexts/AgentContext';
+import toast from 'react-hot-toast';
 
 function AppContent() {
   const [messages, setMessages] = useState<ChatMessageType[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState<ChatMessageType | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Add sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { selectedAgent, currentAgentConfig } = useAgent();
+  
+  // Cleanup function for review analysis
+  useEffect(() => {
+    return () => {
+      // Any cleanup if needed
+    };
+  }, []);
 
-  // Use streaming by default
   const useStreaming = true;
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (content: string, inputValues?: Record<string, any>) => {
+    // If this is a review analysis request
+    if (selectedAgent === 'app-reviews' && inputValues?.url) {
+      try {
+        setIsProcessing(true);
+        
+        // Add user message
+        const userMessage: ChatMessageType = {
+          id: Date.now().toString(),
+          role: 'user',
+          content: `Analyzing reviews from: ${inputValues.url}`,
+        };
+        
+        setMessages(prev => [...prev, userMessage]);
+        
+        // Add a loading message
+        const loadingMessage: ChatMessageType = {
+          id: 'loading',
+          role: 'assistant',
+          content: 'Starting review analysis...',
+          isLoading: true
+        };
+        
+        setMessages(prev => [...prev, loadingMessage]);
+        
+        // Start the review analysis
+        const cleanup = apiService.analyzeReviews(
+          inputValues.url,
+          // Progress callback
+          (progress: string) => {
+            setMessages(prev => 
+              prev.map(msg => 
+                msg.id === 'loading' 
+                  ? { ...msg, content: progress }
+                  : msg
+              )
+            );
+          },
+          // Complete callback
+          (result: any) => {
+            console.log('Review analysis result:', result);
+            
+            // Extract the review analysis from the results
+            const reviewAnalysis = result.results?.review_analysis || [];
+            const extractedReviews = result.results?.extracted_reviews || [];
+            
+            // Create a summary message
+            const summary = `Analysis complete! Processed ${extractedReviews.length} reviews.`;
+            
+            setMessages(prev => [
+              ...prev.filter(msg => msg.id !== 'loading'),
+              {
+                id: Date.now().toString(),
+                role: 'assistant',
+                content: summary,
+                data: {
+                  ...result.results,
+                  review_analysis: reviewAnalysis,
+                  extracted_reviews: extractedReviews
+                }
+              }
+            ]);
+            setIsProcessing(false);
+          },
+          // Error callback
+          (error: Error) => {
+            console.error('Review analysis error:', error);
+            setMessages(prev => [
+              ...prev.filter(msg => msg.id !== 'loading'),
+              {
+                id: Date.now().toString(),
+                role: 'assistant',
+                content: `Error analyzing reviews: ${error.message}`
+              }
+            ]);
+            setIsProcessing(false);
+            toast.error('Failed to analyze reviews');
+          }
+        );
+        
+        // Return cleanup function
+        return () => {
+          if (cleanup) cleanup();
+        };
+        
+      } catch (error) {
+        console.error('Error starting review analysis:', error);
+        toast.error('Failed to start review analysis');
+        setIsProcessing(false);
+      }
+      return;
+    }
     
-    // Add user message
     const userMessage: ChatMessageType = {
+      id: Date.now().toString(),
       role: 'user',
       content,
-      id: Date.now().toString(),
     };
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
-    // Reset streaming message
     setStreamingMessage(null);
 
     try {
-      // Handle different agent types
       if (selectedAgent === 'chat') {
-        // Regular chat flow
         const allMessages = [...messages, userMessage];
 
         if (useStreaming) {
-          // Create an initial streaming message
           const initialStreamingMessage: ChatMessageType = {
             role: 'assistant',
             content: '',
@@ -44,23 +138,19 @@ function AppContent() {
           };
           setStreamingMessage(initialStreamingMessage);
 
-          // Use streaming API
           await apiService.sendChatCompletionStream(
             allMessages,
-            // Handle each chunk
             (content, _delta) => {
               setStreamingMessage(prev => {
                 if (!prev) return null;
                 return { ...prev, content };
               });
             },
-            // Handle completion
             (assistantMessage) => {
               setStreamingMessage(null);
               setMessages(prev => [...prev, assistantMessage]);
               setIsLoading(false);
             },
-            // Handle errors
             (error) => {
               setStreamingMessage(null);
               const errorMessage: ChatMessageType = {
@@ -73,67 +163,22 @@ function AppContent() {
             }
           );
         } else {
-          // Use non-streaming API
           const assistantMessage = await apiService.sendChatCompletion(allMessages);
           setMessages(prev => [...prev, assistantMessage]);
           setIsLoading(false);
         }
       } else if (selectedAgent === 'app-reviews') {
-        // App reviews analysis flow
-        try {
-          // Parse the content if it's JSON (for complex inputs)
-          let requestData: any;
-          try {
-            requestData = JSON.parse(content);
-          } catch {
-            // For simple agents with a single input
-            requestData = { url: content };
-          }
-          
-          // Create a processing message
-          const processingMessage: ChatMessageType = {
-            role: 'system',
-            content: `Analyzing reviews from: ${requestData.url}\n\nThis may take a minute...`,
-            id: `processing-${Date.now()}`,
-          };
-          setMessages(prev => [...prev, processingMessage]);
-          
-          // Call the reviews analysis API
-          const response = await fetch(currentAgentConfig.endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(requestData),
-          });
-          
-          if (!response.ok) {
-            throw new Error(`Error: ${response.status} ${response.statusText}`);
-          }
-          
-          const data = await response.json();
-          
-          // Create a result message
-          const resultMessage: ChatMessageType = {
-            role: 'assistant',
-            content: `## Review Analysis Results\n\n${JSON.stringify(data.review_analysis, null, 2)}`,
-            id: Date.now().toString(),
-          };
-          
-          // Remove the processing message and add the result
-          setMessages(prev => prev.filter(msg => msg.id !== processingMessage.id).concat(resultMessage));
-          setIsLoading(false);
-        } catch (error) {
-          const errorMessage: ChatMessageType = {
-            role: 'system',
-            content: `Error analyzing reviews: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            id: Date.now().toString(),
-          };
-          setMessages(prev => [...prev, errorMessage]);
-          setIsLoading(false);
-        }
+        // This block is a fallback and should not be reached since we handle app-reviews at the beginning
+        // of the function. We'll keep it as a safety net but log a warning.
+        console.warn('Unexpected code path: app-reviews agent should be handled by the initial check');
+        const errorMessage: ChatMessageType = {
+          role: 'system',
+          content: 'Please provide a valid URL to analyze reviews.',
+          id: Date.now().toString(),
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        setIsLoading(false);
       } else if (currentAgentConfig.disabled) {
-        // Handle disabled agents
         const errorMessage: ChatMessageType = {
           role: 'system',
           content: `The ${currentAgentConfig.label} agent is coming soon. Please try another agent.`,
@@ -157,10 +202,10 @@ function AppContent() {
   return (
     <Layout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen}>
       <div className="max-w-4xl mx-auto p-4 h-full">
-        <ChatContainer
+        <ChatContainer 
           messages={messages}
           streamingMessage={streamingMessage}
-          isLoading={isLoading}
+          isLoading={isLoading || isProcessing}
           onSendMessage={handleSendMessage}
           sidebarOpen={sidebarOpen}
         />

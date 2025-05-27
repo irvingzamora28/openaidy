@@ -87,6 +87,94 @@ export const apiService = {
   },
 
   /**
+   * Analyze reviews from a URL with progress updates via Server-Sent Events
+   * 
+   * @param url The URL to analyze reviews from
+   * @param onProgress Callback for progress updates
+   * @param onComplete Callback when analysis is complete
+   * @param onError Callback for errors
+   */
+  analyzeReviews(
+    url: string,
+    onProgress: (message: string) => void,
+    onComplete: (result: any) => void,
+    onError: (error: Error) => void
+  ): () => void {
+    // Create an AbortController to allow cancelling the fetch request
+    const controller = new AbortController();
+    let eventSource: EventSource | null = null;
+    
+    // Start the request
+    (async () => {
+      try {
+        // First, make a POST request to start the analysis
+        const response = await fetch('/api/reviews/analyze', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ url }),
+          signal: controller.signal
+        });
+        
+        if (!response.ok || !response.body) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // Create a new EventSource for the SSE stream
+        // The server should return a URL to connect to for SSE
+        const data = await response.json();
+        if (!data.stream_url) {
+          throw new Error('No stream URL returned from server');
+        }
+        
+        eventSource = new EventSource(data.stream_url);
+        
+        eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            
+            switch (data.event) {
+              case 'progress':
+                onProgress(data.data);
+                break;
+                
+              case 'complete':
+                onComplete(data.data);
+                eventSource?.close();
+                break;
+                
+              case 'error':
+                eventSource?.close();
+                onError(new Error(data.data));
+                break;
+            }
+          } catch (e) {
+            console.error('Error parsing SSE data:', e);
+            eventSource?.close();
+            onError(e instanceof Error ? e : new Error(String(e)));
+          }
+        };
+        
+        eventSource.onerror = (error) => {
+          console.error('SSE error:', error);
+          eventSource?.close();
+          onError(new Error('Failed to connect to the server'));
+        };
+        
+      } catch (error) {
+        onError(error instanceof Error ? error : new Error(String(error)));
+      }
+    })();
+    
+    // Return a cleanup function
+    return () => {
+      controller.abort();
+      eventSource?.close();
+    };
+  },
+
+  /**
    * Send a streaming chat completion request to the backend
    *
    * @param messages Array of chat messages

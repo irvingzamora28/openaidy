@@ -3,7 +3,7 @@ import { Send } from 'lucide-react';
 import { useAgent, InputField } from '@/contexts/AgentContext';
 
 interface Props {
-  onSendMessage: (message: string) => void;
+  onSendMessage: (message: string, inputValues?: Record<string, any>) => void;
   disabled?: boolean;
 }
 
@@ -48,6 +48,19 @@ export function ChatInput({ onSendMessage, disabled }: Props) {
       });
     
     if (!requiredFieldsFilled) return;
+    
+    // For the app-reviews agent, pass the input values as the second parameter
+    if (currentAgentConfig.type === 'app-reviews') {
+      onSendMessage('', inputValues);
+      
+      // Reset the input value
+      const inputId = currentAgentConfig.inputs[0].id;
+      setInputValues(prev => ({
+        ...prev,
+        [inputId]: ''
+      }));
+      return;
+    }
     
     // For simple agents with a single text/textarea input
     if (currentAgentConfig.inputs.length === 1 && 

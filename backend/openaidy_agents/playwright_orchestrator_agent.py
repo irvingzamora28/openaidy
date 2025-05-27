@@ -5,13 +5,18 @@ from mcp.client.stdio import stdio_client
 from openaidy_agents import playwright_navigation_agent, playwright_snapshot_agent, element_discovery_agent, playwright_click_agent, review_extraction_agent, review_analysis_agent
 import json
 
-async def run_orchestrator(url, snapshot_filename="snapshot.json"):
+async def run_orchestrator(url, snapshot_filename="snapshot.json", progress_callback=None):
     """
     Orchestrates navigation, snapshot, and element discovery using custom low-level MCP functions and LLM agent chunking.
     1. Starts MCP server.
     2. Navigates to the URL.
     3. Takes a snapshot and saves it to a file.
     4. Loads the snapshot and discovers elements in chunks.
+    
+    Args:
+        url: The URL to navigate to
+        snapshot_filename: Filename to save the snapshot to
+        progress_callback: Optional async function to call with progress updates
     """
     server_params = StdioServerParameters(
         command="bunx",
@@ -21,6 +26,8 @@ async def run_orchestrator(url, snapshot_filename="snapshot.json"):
         async with ClientSession(read, write) as mcp_server:
             await mcp_server.initialize()
             # Step 1: Navigate using custom tool
+            if progress_callback:
+                await progress_callback(f"Navigating to {url}...")
             nav_result = await playwright_navigation_agent.navigate_with_mcp(url, mcp_server)
             print(f"Navigation result: {nav_result}")
             # Step 2: Snapshot using custom tool
@@ -28,7 +35,9 @@ async def run_orchestrator(url, snapshot_filename="snapshot.json"):
             print(f"Snapshot saved to {snapshot_filename}")
 
             # Step 3: Run element discovery on the in-memory snapshot (snap_result)
-            labels = ["Sort by", "Load more"]
+            labels = ["Sort by", "Load more", "Write a review"]
+            if progress_callback:
+                await progress_callback("Discovering interactive elements...")
             element_discovery = await element_discovery_agent.discover_elements_from_snapshot(snap_result, labels)
             print(f"Element discovery result: {element_discovery}")
 
@@ -86,6 +95,8 @@ async def run_orchestrator(url, snapshot_filename="snapshot.json"):
                 load_more_click_results.append(click_result)
                 await asyncio.sleep(5)  # Wait for content to load
                 # Take snapshot after click
+                if progress_callback:
+                    await progress_callback("Taking page snapshot...")
                 snapshot = await playwright_snapshot_agent.snapshot_with_mcp(mcp_server, filename=f"load_more_snapshot_{iteration+1}.json")
                 load_more_snapshots.append(snapshot)
                 # Discover 'Load more' in the new snapshot
@@ -103,6 +114,8 @@ async def run_orchestrator(url, snapshot_filename="snapshot.json"):
             print(f"Snapshot saved to last_snapshot.json")
 
             # Step 11: Extract reviews from the last snapshot
+            if progress_callback:
+                await progress_callback("Extracting reviews...")
             extracted_reviews = await review_extraction_agent.extract_reviews_from_snapshot(last_snapshot)
             print(f"Extracted {len(extracted_reviews)} reviews.")
             if extracted_reviews:
@@ -111,6 +124,8 @@ async def run_orchestrator(url, snapshot_filename="snapshot.json"):
                 json.dump(extracted_reviews, f, indent=2, ensure_ascii=False)
                 
             # Step 12: Analyze reviews
+            if progress_callback:
+                await progress_callback("Analyzing reviews...")
             review_analysis = await review_analysis_agent.analyze_reviews_in_chunks(extracted_reviews, output_file="review_analysis_chatgpt_summarize.json")
             print(f"Review analysis result: {review_analysis}")
 
