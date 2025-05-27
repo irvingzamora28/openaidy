@@ -127,14 +127,29 @@ async def run_orchestrator(url, snapshot_filename="snapshot.json"):
                 # Add further results as needed
             }
 
+def orchestrate_reviews_pipeline(url, snapshot_filename="snapshot.json"):
+    """
+    Run the full review extraction and analysis pipeline for a given URL.
+    Args:
+        url (str): Target reviews page URL.
+        snapshot_filename (str): Filename for saving the main snapshot (default: 'snapshot.json').
+    Returns:
+        dict: Results from the pipeline, including extracted reviews and analysis.
+    """
+    return asyncio.run(run_orchestrator(url, snapshot_filename=snapshot_filename))
+
 def main():
-    # url = "https://chromewebstore.google.com/detail/momentum/laookkfknpbbblfpciffpaejjkokdgca/reviews"
-    # url = "https://chromewebstore.google.com/detail/youtube-summary-with-chat/nmmicjeknamkfloonkhhcjmomieiodli/reviews"
-    url = "https://chromewebstore.google.com/detail/chatgpt-summarize/cbgecfllfhmmnknmamkejadjmnmpfjmp/reviews"
-    result = asyncio.run(run_orchestrator(url, snapshot_filename="snapshot.json"))
-    print(result)
-    
-if __name__ == "__main__":
+    import sys
+    url = None
+    if len(sys.argv) > 1:
+        url = sys.argv[1]
+    else:
+        # Default URL (can be changed)
+        url = "https://chromewebstore.google.com/detail/chatgpt-summarize/cbgecfllfhmmnknmamkejadjmnmpfjmp/reviews"
     if not shutil.which("bunx"):
         raise RuntimeError("bunx is not installed. Please install Node.js and bunx.")
+    result = orchestrate_reviews_pipeline(url)
+    print(result)
+
+if __name__ == "__main__":
     main()

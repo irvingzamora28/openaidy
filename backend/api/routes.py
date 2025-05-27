@@ -12,6 +12,37 @@ from ..llm.base import LLMProvider
 
 router = APIRouter()
 
+from openaidy_agents.playwright_orchestrator_agent import orchestrate_reviews_pipeline
+from pydantic import BaseModel
+from fastapi import Body
+
+class ReviewAnalysisRequest(BaseModel):
+    url: str
+
+class ReviewAnalysisResponse(BaseModel):
+    navigation_result: dict
+    snapshot_result: dict
+    element_discovery: dict
+    click_result: dict
+    post_click_snapshot: dict
+    load_more_click_results: list
+    load_more_snapshots: list
+    extracted_reviews: list
+    review_analysis: list
+
+@router.post("/reviews/analyze", response_model=ReviewAnalysisResponse)
+async def analyze_reviews(request: ReviewAnalysisRequest = Body(...)):
+    """
+    Extract and analyze reviews from a given Chrome Web Store reviews URL.
+    The pipeline will navigate, paginate, extract, and analyze reviews using LLM agents.
+    Returns all intermediate and final results.
+    """
+    try:
+        result = orchestrate_reviews_pipeline(request.url)
+        return ReviewAnalysisResponse(**result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 async def get_llm_provider() -> LLMProvider:
     """
