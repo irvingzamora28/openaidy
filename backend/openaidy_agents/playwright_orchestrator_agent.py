@@ -107,8 +107,12 @@ async def run_orchestrator(url, snapshot_filename="snapshot.json"):
             print(f"Extracted {len(extracted_reviews)} reviews.")
             if extracted_reviews:
                 print("First review:", json.dumps(extracted_reviews[0], indent=2, ensure_ascii=False))
-            with open("extracted_reviews_youtube_summary.json", "w", encoding="utf-8") as f:
+            with open("extracted_reviews_chatgpt_summarize.json", "w", encoding="utf-8") as f:
                 json.dump(extracted_reviews, f, indent=2, ensure_ascii=False)
+                
+            # Step 12: Analyze reviews
+            review_analysis = await review_analysis_agent.analyze_reviews_in_chunks(extracted_reviews, output_file="review_analysis_chatgpt_summarize.json")
+            print(f"Review analysis result: {review_analysis}")
 
             return {
                 "navigation_result": nav_result,
@@ -119,31 +123,18 @@ async def run_orchestrator(url, snapshot_filename="snapshot.json"):
                 "load_more_click_results": load_more_click_results,
                 "load_more_snapshots": load_more_snapshots,
                 "extracted_reviews": extracted_reviews,
+                "review_analysis": review_analysis,
                 # Add further results as needed
             }
 
 def main():
     # url = "https://chromewebstore.google.com/detail/momentum/laookkfknpbbblfpciffpaejjkokdgca/reviews"
-    url = "https://chromewebstore.google.com/detail/youtube-summary-with-chat/nmmicjeknamkfloonkhhcjmomieiodli/reviews"
+    # url = "https://chromewebstore.google.com/detail/youtube-summary-with-chat/nmmicjeknamkfloonkhhcjmomieiodli/reviews"
+    url = "https://chromewebstore.google.com/detail/chatgpt-summarize/cbgecfllfhmmnknmamkejadjmnmpfjmp/reviews"
     result = asyncio.run(run_orchestrator(url, snapshot_filename="snapshot.json"))
     print(result)
     
 if __name__ == "__main__":
-    import json
-    import asyncio
-    # TEMP: Analyze reviews from extracted_reviews_youtube_summary.json
-    with open("extracted_reviews_youtube_summary.json", "r", encoding="utf-8") as f:
-        reviews = json.load(f)
-    analysis_results = asyncio.run(
-        review_analysis_agent.analyze_reviews_in_chunks(
-            reviews,
-            output_file="review_analysis_results_youtube_summary.json"
-        )
-    )
-    print(f"Analysis complete. {len(analysis_results)} chunks processed.")
-    if analysis_results:
-        print("First chunk analysis:", json.dumps(analysis_results[0], indent=2, ensure_ascii=False))
-    # # Normal orchestrator code (disabled for now)
-    # if not shutil.which("bunx"):
-    #     raise RuntimeError("bunx is not installed. Please install Node.js and bunx.")
-    # main()
+    if not shutil.which("bunx"):
+        raise RuntimeError("bunx is not installed. Please install Node.js and bunx.")
+    main()
