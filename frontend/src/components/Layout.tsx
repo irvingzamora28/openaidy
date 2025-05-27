@@ -2,8 +2,9 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { DarkModeToggle } from './DarkModeToggle';
 // Removed unused imports
-import { Menu, Home, Settings, User } from 'lucide-react';
+import { Menu, Home, Settings, User, ChevronDown, ChevronRight, Star, Youtube, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAgent, AgentType } from '@/contexts/AgentContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -13,32 +14,104 @@ interface LayoutProps {
 
 // Define sidebar navigation items in one place
 const sidebarItems = [
-  { icon: Home, label: 'Dashboard' },
-  { icon: Settings, label: 'Settings' },
-  { icon: User, label: 'Profile' }
+  { icon: Home, label: 'Dashboard', path: '/' },
+  { 
+    icon: Star, 
+    label: 'Review Agents', 
+    children: [
+      { icon: Star, label: 'App Reviews', path: '/reviews/app' },
+      { icon: ShoppingCart, label: 'Product Reviews', path: '/reviews/product', disabled: true },
+      { icon: Youtube, label: 'YouTube Comments', path: '/reviews/youtube', disabled: true }
+    ] 
+  },
+  { icon: Settings, label: 'Settings', path: '/settings' },
+  { icon: User, label: 'Profile', path: '/profile' }
 ];
 
 // Sidebar content component to reuse in both desktop and mobile
-const SidebarContent = () => (
-  <>
-    <div className="flex-1">
-      <nav className="space-y-2">
-        {sidebarItems.map((item, index) => (
-          <div 
-            key={index} 
-            className="flex items-center gap-2 p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer"
-          >
-            <item.icon className="h-5 w-5" />
-            <span>{item.label}</span>
-          </div>
-        ))}
-      </nav>
-    </div>
-    <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
-      <DarkModeToggle />
-    </div>
-  </>
-);
+const SidebarContent = () => {
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({
+    'Review Agents': true // Start with Review Agents expanded
+  });
+  const { selectedAgent, setSelectedAgent } = useAgent();
+  
+  const toggleExpand = (label: string) => {
+    setExpandedItems(prev => ({
+      ...prev,
+      [label]: !prev[label]
+    }));
+  };
+
+  const handleAgentSelect = (agentType: AgentType) => {
+    setSelectedAgent(agentType);
+  };
+  
+  return (
+    <>
+      <div className="flex-1">
+        <nav className="space-y-1">
+          {sidebarItems.map((item, index) => (
+            <div key={index}>
+              <div 
+                className={`flex items-center justify-between p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer ${item.children ? '' : 'pl-3'}`}
+                onClick={() => {
+                  if (item.children) {
+                    toggleExpand(item.label);
+                  } else if (item.path === '/') {
+                    handleAgentSelect('chat');
+                  }
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <item.icon className="h-5 w-5" />
+                  <span className={item.children ? 'font-medium' : ''}>{item.label}</span>
+                </div>
+                {item.children && (
+                  expandedItems[item.label] ? 
+                    <ChevronDown className="h-4 w-4" /> : 
+                    <ChevronRight className="h-4 w-4" />
+                )}
+              </div>
+              
+              {/* Render children if expanded */}
+              {item.children && expandedItems[item.label] && (
+                <div className="ml-4 pl-2 border-l border-gray-200 dark:border-gray-700 mt-1 space-y-1">
+                  {item.children.map((child, childIndex) => (
+                    <div 
+                      key={childIndex} 
+                      className={`flex items-center gap-2 p-2 rounded ${child.disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer'} ${
+                        selectedAgent === (child.path === '/reviews/app' ? 'app-reviews' : 
+                                          child.path === '/reviews/product' ? 'product-reviews' : 
+                                          child.path === '/reviews/youtube' ? 'youtube-comments' : '') ? 
+                        'bg-blue-100 dark:bg-blue-900/20' : ''
+                      }`}
+                      onClick={() => {
+                        if (!child.disabled) {
+                          if (child.path === '/reviews/app') handleAgentSelect('app-reviews');
+                          else if (child.path === '/reviews/product') handleAgentSelect('product-reviews');
+                          else if (child.path === '/reviews/youtube') handleAgentSelect('youtube-comments');
+                        }
+                      }}
+                    >
+                      <child.icon className="h-4 w-4" />
+                      <span>{child.label}</span>
+                      {child.disabled && (
+                        <span className="text-xs bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded text-gray-500 dark:text-gray-400 ml-1">Soon</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </nav>
+      </div>
+      <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
+        <DarkModeToggle />
+      </div>
+    </>
+  );
+};
 
 export function Layout({ children, sidebarOpen: propSidebarOpen, setSidebarOpen: propSetSidebarOpen }: LayoutProps) {
   // Use props if provided, otherwise use local state
