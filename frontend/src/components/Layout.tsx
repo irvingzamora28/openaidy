@@ -68,14 +68,14 @@ export function Layout({ children, sidebarOpen: propSidebarOpen, setSidebarOpen:
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
       {/* Header with app name and toggle button */}
-      <header className="fixed top-0 left-0 right-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center px-4">
+      <header className="fixed top-0 left-0 right-0 z-30 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 h-16 flex items-center px-4 shadow-sm">
         <div className="flex items-center justify-between w-full max-w-7xl mx-auto">
           <h1 className="text-xl font-bold text-gray-800 dark:text-white">OpenAIDY Chat</h1>
           
           {/* Sidebar toggle button - on the right side */}
           <div className="flex items-center gap-4">
             <button
-              className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+              className="p-2 rounded-full hover:bg-gray-100/80 dark:hover:bg-gray-700/80 transition-colors"
               onClick={toggleSidebar}
               aria-expanded={sidebarOpen}
             >
@@ -90,7 +90,7 @@ export function Layout({ children, sidebarOpen: propSidebarOpen, setSidebarOpen:
       <div 
         className={cn(
           // Base styles for mobile
-          "fixed z-20 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 transition-transform duration-300 ease-out will-change-transform",
+          "fixed z-20 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border-l border-gray-200 dark:border-gray-700 transition-transform duration-300 ease-out will-change-transform shadow-xl",
           "top-0 bottom-0 right-0 w-[85%] md:w-80",
           // Transform for mobile
           sidebarOpen ? "translate-x-0" : "translate-x-full",
@@ -104,7 +104,7 @@ export function Layout({ children, sidebarOpen: propSidebarOpen, setSidebarOpen:
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
             <button 
               onClick={() => setSidebarOpen(false)}
-              className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+              className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
@@ -125,8 +125,8 @@ export function Layout({ children, sidebarOpen: propSidebarOpen, setSidebarOpen:
       <div 
         className={cn(
           // Base styles for desktop
-          "fixed z-20 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 transition-transform duration-300 ease-out will-change-transform",
-          "top-16 bottom-0 right-0 w-64",
+          "fixed z-20 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border-l border-gray-200 dark:border-gray-700 transition-transform duration-300 ease-out will-change-transform shadow-lg",
+          "top-16 bottom-0 right-0 w-64 rounded-tl-xl",
           // Transform for desktop
           sidebarOpen ? "translate-x-0" : "translate-x-full",
           // Only show on desktop

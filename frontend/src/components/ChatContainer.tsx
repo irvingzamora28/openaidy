@@ -40,7 +40,7 @@ export function ChatContainer({
   return (
     <div className="flex flex-col h-full">
       {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 mb-24">
+      <div className="flex-1 overflow-y-auto p-4 space-y-6 mb-24 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent">
         {messages.map(message => (
           <ChatMessage key={message.id} message={message} />
         ))}
@@ -53,7 +53,7 @@ export function ChatContainer({
 
       {/* Input Form - adjusts position based on sidebar state */}
       <div 
-        className={`fixed bottom-0 left-0 bg-white dark:bg-gray-800 p-4 border-t border-gray-200 dark:border-gray-700 transition-all duration-300 ease-out`}
+        className={`fixed bottom-0 left-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md p-6 border-t border-gray-200 dark:border-gray-700 transition-all duration-300 ease-out shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]`}
         style={{
           right: sidebarOpen && isDesktop ? '16rem' : 0
         }}
