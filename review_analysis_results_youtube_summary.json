@@ -1,0 +1,220 @@
+[
+  {
+    "overall_sentiment": "Overwhelmingly negative. The vast majority of reviews express extreme dissatisfaction with the extension.",
+    "common_themes": [
+      "Functionality breakdown: The extension is frequently reported as 'not working' or 'doesn't work anymore'.",
+      "Subscription/payment issues: Users complain about the introduction of paid features, limited free summaries, and being asked to pay for functionality they believe should be free.",
+      "Value proposition concerns: Many reviewers argue that the extension offers little value, especially considering they are already paying for their own AI services (like ChatGPT) and the extension primarily automates copying and pasting transcripts.",
+      "Outdated AI models: One review mentions the use of outdated AI models despite the subscription cost.",
+      "Poor User Experience: Users find the interface unintuitive and confusing to use."
+    ],
+    "frequent_complaints": [
+      "Extension no longer works or fails to retrieve transcripts.",
+      "Introduction of a paid subscription model with limited free usage (e.g., 2-3 summaries per day).",
+      "High subscription cost ($10/month) is perceived as excessive for the provided functionality.",
+      "The extension essentially automates copying and pasting transcripts into other AI services that users already pay for.",
+      "Lack of clear instructions or intuitive user interface.",
+      "Auto Translation occurs without user consent."
+    ],
+    "frequent_praises": [
+      "Previously worked well (mentioned in several reviews before the functionality stopped or the payment model was introduced).",
+      "Convenient (also mentioned in the context of when it was free or working correctly)."
+    ],
+    "rating_patterns": "There is a strong clustering of 1-star reviews. This indicates a widespread and significant problem with the extension.",
+    "representative_reviews": [
+      {
+        "text": "Doesn't work! I assumed all the 1-star reviews were for people who just didn't put in the effort - but I just wasted part of my day trying to figure this POS out! Save yourself some time and skip this extension.",
+        "author": "Jason Ryer",
+        "rating": 1
+      },
+      {
+        "text": "Asking to pay for more than 3 summaries when all you're doing is redirecting the transcript to another service is an insane cash grab and no way it's working. Especially $10/month. It's sad because I really liked the extensions when it was working.",
+        "author": "Sacha Charbit",
+        "rating": 1
+      },
+      {
+        "text": "They are really charging a subscription to open MY CHATGPT THAT I PAID FOR and paste a transcript in there. I'd give this ZERO stars if I could.",
+        "author": "Steven Le",
+        "rating": 1
+      }
+    ]
+  },
+  {
+    "overall_sentiment": "Negative. The overwhelming majority of reviews are negative due to the introduction of a paid subscription model and severe limitations on the free version, which users perceive as a significant downgrade of a previously useful tool.",
+    "common_themes": [
+      "Sudden shift to paid subscription/paywall",
+      "Limited free usage (2-3 summaries per day)",
+      "High price for subscription relative to value",
+      "Redirection to settings/AI model selection instead of direct summarization",
+      "Lack of intuitiveness and usability",
+      "Bugs and functionality issues",
+      "Copy-pasting into user's own ChatGPT account being charged for",
+      "Desire for unlimited access to the original functionality"
+    ],
+    "frequent_complaints": [
+      "Paywall/subscription requirement after previously free access",
+      "Limited number of free summaries (2 or 3 per day)",
+      "High subscription price for the perceived value",
+      "Non-functional or buggy extension",
+      "Difficult or confusing user interface",
+      "Extension merely redirects to settings or AI model options",
+      "Doesn't translate whole content",
+      "Not working on mobile"
+    ],
+    "frequent_praises": [
+      "There are no praises in the dataset. The few reviews that initially seem positive are quickly negated by complaints about the new limitations."
+    ],
+    "rating_patterns": "Almost all ratings are 1-star, indicating strong dissatisfaction. There's a clear cluster of negative feedback directly related to the change in the extension's pricing and functionality.",
+    "representative_reviews": [
+      {
+        "author": "Leonardo Guia",
+        "rating": 1,
+        "text": "I was unable to use this extension effectively. When clicking the button, I expected a summary option, even while watching a video. Instead, I was redirected to a page with numerous AI model options and prompt-related fields. Despite selecting a model and prompt, I couldn't find a 'summarize' button or a URL field to enter a video link. The user interface lacks clarity and intuitiveness, making it difficult to navigate. As a full-stack developer, I'm confident in my ability to use websites an..."
+      },
+      {
+        "author": "Andy V",
+        "date": "Jan 5, 2025",
+        "text": "They’re now charging you for the “privilege” of copy-pasting your own text into a ChatGPT Plus account you already pay for... I’ve uninstalled the extension and will happily do the copy-pasting myself.",
+        "rating": "1"
+      },
+      {
+        "author": "Akarsh Rastogi",
+        "rating": 1,
+        "text": "RIDICULOUS!!! NOW ITS PAID, ONLY 3 TIMES ALLOWED, LOL WHATTTT??? Taking away the access users always had is the worst business decision you could have taken. You should've introduced a new paid tier and asked users to upgrade for new and more robust features. This is like giving a massive middle finger to all your customers. What a shameful act from the team."
+      }
+    ]
+  },
+  {
+    "overall_sentiment": "Negative. The overwhelming majority of reviews are negative, primarily due to the recent implementation of a paywall and the perceived lack of value for the subscription price.",
+    "common_themes": [
+      "Paywall/Subscription",
+      "Free tool turned paid",
+      "Lack of Value for Price",
+      "Functionality Issues (doesn't work, bugs)",
+      "Mobile Incompatibility",
+      "Misleading/Clickbait",
+      "Uses own ChatGPT credits",
+      "Unnecessary Monetization"
+    ],
+    "most_frequent_complaints": [
+      "The tool, previously free, now requires a paid subscription.",
+      "The subscription is considered overpriced for the limited functionality offered.",
+      "The tool simply copies and pastes content into the user's own ChatGPT account, using their credits.",
+      "The tool is buggy or doesn't work as expected.",
+      "Users perceive the monetization as greedy or exploitative.",
+      "The tool is not user-friendly and lacks clear instructions.",
+      "Doesn't work on mobile devices.",
+      "Some report the tool generating transcripts in the wrong language."
+    ],
+    "most_frequent_praises": [
+      "Some users acknowledge the tool's convenience when it was free.",
+      "A few users mention it used to work well before the paywall was implemented."
+    ],
+    "rating_patterns": "There is a strong cluster of 1-star ratings, indicating widespread dissatisfaction. There are no positive ratings in this sample.",
+    "representative_reviews": [
+      {
+        "author": "Mindblowew656",
+        "rating": 1,
+        "text": "They turned a free tool that copies the transcript of a YT video and pastes it into YOUR ChatGPT account into a paid service. YOUR OWN ACCOUNT. You are using up your own ChatGPT usage credits to summarise videos and they have the AUDACITY to lock this behind a $10 subscription. The subscription has ZERO added value after purchase as it still pastes the transcript into your ChatGPT account.",
+        "date": "Nov 23, 2024"
+      },
+      {
+        "author": "Boris",
+        "rating": 1,
+        "text": "I can't believe they are trying to charge $10/month to use this tools, it's more like a price for a lifetime purchase. I mean it's a good convenience ngl, but let us just list the services that are charging ~$10: spotify, netflix, apple music...So this \\\"team\\\" thinks their front-end simple parse-and-request automation tools will supply similar value compared to those daily/weekly updated streaming service not to mention they are not providing any AI platform api quotas or any computation pow...",
+        "date": "Nov 18, 2024"
+      },
+      {
+        "author": "Yogesh surwade",
+        "rating": "1 out of 5 stars",
+        "text": "third class extenions completely useless. its generating automatically to hindi even tho i never asked for it. why are you generating youtube video to hindi? i have turned off all the subtitles on youtube video . i also mentioned english in setttings of this extentions still its generating hindi transcript from the video . what a pathetic fail. absolute garbage",
+        "date": "Oct 11, 2024"
+      }
+    ]
+  },
+  {
+    "overall_sentiment": "Overwhelmingly negative. The vast majority of reviews are 1-star, indicating widespread dissatisfaction with the product.",
+    "common_themes": [
+      "Functionality issues (not working, broken)",
+      "Paywall for basic features (misleading, not free)",
+      "Lack of clear instructions/documentation",
+      "Intrusive behavior (opening new tabs, unwanted updates)",
+      "Problems with language settings",
+      "Issues with ChatGPT integration",
+      "Difficulty in using the extension"
+    ],
+    "frequent_complaints": [
+      "Extension doesn't work as expected.",
+      "Basic features are hidden behind a paywall, making it seem misleadingly free.",
+      "Lack of instructions or clear guidance on how to use the extension.",
+      "Extension is intrusive, opening new tabs or displaying unwanted updates.",
+      "Problems with language settings, displaying content in the wrong language.",
+      "Issues with the integration with ChatGPT.",
+      "Inability to get the extension to start or trigger."
+    ],
+    "frequent_praises": [
+      "One user mentioned 'I love this extension, I use it a lot', but qualified it with a feature request, indicating that while they like the core idea, it needs improvement. (Note: This user initially gave a 1-star review for visibility but intended to change it to 5 stars.)"
+    ],
+    "rating_patterns": "There is a strong cluster of 1-star reviews. All the reviews are 1-star.",
+    "representative_reviews": [
+      {
+        "author": "Darin Schneider",
+        "rating": "1",
+        "text": "It couldnt do what I wanted an extension to. Don't know what else it will do because every other option is behind a paywall.. I'm sure they'll hop in and talk about how free it is... but yeah, no..."
+      },
+      {
+        "author": "Patricia Taylor",
+        "rating": "1",
+        "text": "I have no clue what Glasp is and no way to remove this until I stumbled upon an article that indicted this extension added Glasp. Glasp keeps opening tabs to tell me about updates. Really? Not cool to have a hidden app."
+      },
+      {
+        "author": "Peter Møller",
+        "rating": "1",
+        "text": "It doesn't work any longer. It only transfers the title of the YouTube video to the chatbots to be summarized. It doesn't transfer the transcript of the video."
+      }
+    ]
+  },
+  {
+    "overall_sentiment": "Negative. The reviews are overwhelmingly negative, with users reporting functionality issues, misleading features, and changes to pricing.",
+    "common_themes": [
+      "Functionality issues (not working, UI not triggering)",
+      "Incorrect URL redirection",
+      "Language problems (displaying in the wrong language)",
+      "Lack of summarization (paraphrasing instead of summarizing)",
+      "Summary panel not showing up",
+      "Paywall after limited use"
+    ],
+    "most_frequent_complaints": [
+      "The extension is not working as expected.",
+      "The UI is not triggering on YouTube pages.",
+      "The extension redirects to the wrong URL.",
+      "The extension displays content in the wrong language.",
+      "The extension fails to provide a proper summary, only paraphrasing.",
+      "The extension has introduced a paywall after a few uses."
+    ],
+    "most_frequent_praises": [
+      "No praises were found in these reviews."
+    ],
+    "rating_patterns": "There is a strong cluster of 1-star ratings, indicating widespread dissatisfaction with the product.",
+    "representative_reviews": [
+      {
+        "author": "ankit sood",
+        "rating": 1,
+        "text": "Not working ... its pointing to the URL - https://chatgpt.com/?ref=glasp&oai-dm=1 earlier its used to point to another url can you fix it",
+        "date": "May 3, 2024"
+      },
+      {
+        "author": "Swaviman Kumar",
+        "rating": 1,
+        "text": "If all it does it paraphrase the original youtube transcript and show it to me then why need a gpt? I needed the extension to summarize the video in short for me, not present me the original transcript as it is. Doesn't serve the purpose for me.",
+        "date": "Apr 9, 2024"
+      },
+      {
+        "author": "jason lefever",
+        "rating": 1,
+        "text": "Used to be free now has a paywall after 3 uses. Uninstalled",
+        "date": "Feb 11, 2024"
+      }
+    ]
+  }
+]
