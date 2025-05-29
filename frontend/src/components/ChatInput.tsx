@@ -1,6 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Bot, Star } from 'lucide-react';
 import { useAgent, InputField } from '@/contexts/AgentContext';
+
+// Map agent types to icons (same as sidebar)
+const agentIconMap: Record<string, React.ElementType> = {
+  'chat': Bot,
+  'app-reviews': Star,
+};
 
 interface Props {
   onSendMessage: (message: string, inputValues?: Record<string, any>) => void;
@@ -35,6 +41,19 @@ export function ChatInput({ onSendMessage, disabled }: Props) {
     }, 0);
   }, [currentAgentConfig.type]);
 
+  // Focus main input when disabled goes from true to false
+  const prevDisabled = useRef(disabled);
+  useEffect(() => {
+    if (prevDisabled.current && !disabled) {
+      setTimeout(() => {
+        mainInputRef.current?.focus();
+      }, 0);
+    }
+    prevDisabled.current = disabled;
+  }, [disabled]);
+
+  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (disabled) return;
@@ -59,6 +78,10 @@ export function ChatInput({ onSendMessage, disabled }: Props) {
         ...prev,
         [inputId]: ''
       }));
+      // Refocus main input
+      setTimeout(() => {
+        mainInputRef.current?.focus();
+      }, 0);
       return;
     }
     
@@ -71,15 +94,17 @@ export function ChatInput({ onSendMessage, disabled }: Props) {
         onSendMessage(value.trim());
         
         // Reset the input value
+        console.log('[ChatInput] Clearing input value for', inputId);
         setInputValues(prev => ({
           ...prev,
           [inputId]: ''
         }));
-        
         // Reset height for textarea
         if (mainInputRef.current && currentAgentConfig.inputs[0].type === 'textarea') {
           (mainInputRef.current as HTMLTextAreaElement).style.height = 'auto';
         }
+
+
       }
     } else {
       // For complex agents with multiple inputs, send the entire input values object as JSON
@@ -95,6 +120,10 @@ export function ChatInput({ onSendMessage, disabled }: Props) {
         }
       });
       setInputValues(resetValues);
+      // Refocus main input
+      setTimeout(() => {
+        mainInputRef.current?.focus();
+      }, 0);
     }
   };
 
@@ -133,10 +162,18 @@ export function ChatInput({ onSendMessage, disabled }: Props) {
     }));
   };
 
-  // Handle Ctrl+Enter or Command+Enter to submit
+  // Handle Enter to submit, Shift+Enter or Ctrl/Command+Enter for new line in textarea
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-      handleSubmit(e);
+    // Only handle for textarea, for single-line input Enter always submits
+    if (e.key === 'Enter') {
+      if (e.shiftKey || e.ctrlKey || e.metaKey) {
+        // Insert newline (default behavior)
+        return;
+      } else {
+        // Prevent default newline and submit
+        e.preventDefault();
+        handleSubmit(e as any);
+      }
     }
   };
 
@@ -162,7 +199,7 @@ export function ChatInput({ onSendMessage, disabled }: Props) {
                 onChange={(e) => handleTextareaChange(e, input.id)}
                 onKeyDown={handleKeyDown}
                 disabled={disabled}
-                className={`w-full p-4 ${isMainInput ? 'pr-12' : ''} max-h-[120px] rounded-2xl resize-none focus:outline-none bg-transparent text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 border border-gray-200 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500`}
+                className={`w-full p-4 ${isMainInput ? 'pr-12 pl-10' : ''} max-h-[120px] rounded-2xl resize-none focus:outline-none bg-transparent text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 border border-gray-200 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500`}
                 placeholder={input.placeholder}
                 rows={1}
                 required={input.required}
@@ -204,7 +241,7 @@ export function ChatInput({ onSendMessage, disabled }: Props) {
                 onChange={(e) => handleInputChange(e, input.id, 'text')}
                 onKeyDown={handleKeyDown}
                 disabled={disabled}
-                className={`w-full p-4 ${isMainInput ? 'pr-12' : ''} h-[52px] rounded-2xl focus:outline-none bg-transparent text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 border border-gray-200 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500`}
+                className={`w-full p-4 ${isMainInput ? 'pr-12 pl-10' : ''} h-[52px] rounded-2xl focus:outline-none bg-transparent text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 border border-gray-200 dark:border-gray-600 focus:border-blue-400 dark:focus:border-blue-500`}
                 placeholder={input.placeholder}
                 required={input.required}
               />
@@ -366,11 +403,17 @@ export function ChatInput({ onSendMessage, disabled }: Props) {
           )}
         </div>
       )}
-      {currentAgentConfig.type !== 'chat' && (
-        <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          <span className="font-medium">{currentAgentConfig.label}</span> agent selected. {currentAgentConfig.disabled ? 'This agent is coming soon.' : ''}
-        </div>
-      )}
+      {/* Show agent icon inline at the left of the input */}
+      <div className="absolute left-2 top-1/2 transform -translate-y-1/2 flex items-center">
+        {(() => {
+          const Icon = agentIconMap[currentAgentConfig.type] || Star;
+          return (
+            <span title={currentAgentConfig.disabled ? 'This agent is coming soon.' : currentAgentConfig.label} className={currentAgentConfig.disabled ? 'opacity-50 cursor-not-allowed' : ''}>
+              <Icon className="h-5 w-5 text-blue-400 dark:text-blue-300" />
+            </span>
+          );
+        })()}
+      </div>
     </form>
   );
 }

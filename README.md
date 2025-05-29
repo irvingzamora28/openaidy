@@ -9,6 +9,7 @@ A simple chat application that supports multiple LLM providers.
   - Google Gemini
   - DeepSeek
   - Ollama (local models)
+- Automated app reviews (currently only for the Chrome Web Store): Easily extract and analyze user reviews from Chrome Web Store apps using an intelligent agent. The agent can navigate to review pages, interact with the site to sort and load more reviews, and provide summarized insights—all automatically.
 - Configurable via environment variables
 - Simple chat interface
 

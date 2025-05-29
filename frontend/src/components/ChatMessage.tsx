@@ -61,7 +61,7 @@ export function ChatMessage({ message }: Props) {
     system: 'justify-center'
   };
 
-  const maxWidth = message.role === 'system' ? 'max-w-2xl' : 'max-w-3xl';
+  const maxWidth = message.role === 'system' ? 'max-w-2xl' : 'max-w-6xl';
 
   // Render review analysis data if available
   const renderReviewAnalysis = () => {

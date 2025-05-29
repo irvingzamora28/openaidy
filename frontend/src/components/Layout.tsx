@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { DarkModeToggle } from './DarkModeToggle';
 // Removed unused imports
-import { Menu, Home, Settings, User, ChevronDown, ChevronRight, Star, Youtube, ShoppingCart } from 'lucide-react';
+import { Menu, Home, Settings, User, ChevronDown, ChevronRight, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAgent, AgentType } from '@/contexts/AgentContext';
 
@@ -19,9 +19,7 @@ const sidebarItems = [
     icon: Star, 
     label: 'Review Agents', 
     children: [
-      { icon: Star, label: 'App Reviews', path: '/reviews/app' },
-      { icon: ShoppingCart, label: 'Product Reviews', path: '/reviews/product', disabled: true },
-      { icon: Youtube, label: 'YouTube Comments', path: '/reviews/youtube', disabled: true }
+      { icon: Star, label: 'App Reviews', path: '/reviews/app', disabled: false },
     ] 
   },
   { icon: Settings, label: 'Settings', path: '/settings' },
